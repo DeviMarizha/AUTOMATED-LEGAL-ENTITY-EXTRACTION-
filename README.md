@@ -53,3 +53,57 @@ March 10, 2024 → TIM
 **Future Scope**
 - Multilingual legal NLP
 - Chatbot-based legal queries
+
+**Code Snippets**
+🔹 File Upload (Streamlit UI)
+
+import streamlit as st
+uploaded_file = st.file_uploader(
+    "Upload legal document",
+    type=['txt', 'pdf', 'docx']
+)
+if uploaded_file:
+    st.success("File uploaded successfully!")
+
+🔹 Text Extraction (PDF/DOCX/TXT)
+def extract_text(uploaded_file):
+    if uploaded_file.type == "text/plain":
+        return uploaded_file.read().decode("utf-8")
+
+    elif uploaded_file.type == "application/pdf":
+        import PyPDF2, io
+        reader = PyPDF2.PdfReader(io.BytesIO(uploaded_file.read()))
+        return " ".join([page.extract_text() for page in reader.pages])
+
+    return None
+
+🔹 NER Prediction (Core Logic)
+import re
+
+def predict_entities(text, patterns):
+    entities = []
+    for label, pattern_list in patterns.items():
+        for pattern in pattern_list:
+            for match in re.finditer(pattern, text, re.IGNORECASE):
+                entities.append({
+                    "entity": label,
+                    "word": match.group(),
+                    "start": match.start(),
+                    "end": match.end()
+                })
+    return entities
+
+🔹 Highlight Entities in Text
+def highlight_text(text, entities):
+    for entity in sorted(entities, key=lambda x: x['start'], reverse=True):
+        start, end = entity['start'], entity['end']
+        word = text[start:end]
+        text = text[:start] + f"[{word}]" + text[end:]
+    return text
+
+🔹 Display Results (Simple Table)
+import pandas as pd
+
+def show_entities(entities):
+    df = pd.DataFrame(entities)
+    return df[['word', 'entity', 'start', 'end']]
